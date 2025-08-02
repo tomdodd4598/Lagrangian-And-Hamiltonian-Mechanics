@@ -1,0 +1,557 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{bigstrut}
+\usepackage{braket}
+\usepackage{dsfont}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyphenat}
+\usepackage{mathtools}
+\usepackage{setspace}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage{svg}
+\usepackage{titling}
+\usepackage{url}
+
+\predate{}
+\postdate{}
+
+\usepackage{hyperref}
+
+\renewcommand{\baselinestretch}{1.25}
+
+\setlength{\droptitle}{-8em}
+
+\title{A Tour of Classical Mechanics}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+\vspace{-4em}
+
+\section{Introduction}
+
+The general goal of theoretical physics can be stated simply: to write down a mathematical model that, when supplied with a set of initial conditions, predicts the dynamics of a physical system. In classical mechanics, first formulated as Newton's laws of motion in his famous \textit{Principia}, the model usually describes the forces acting on some number of objects, particularly particles and rigid bodies. Through Newton's second law,
+$$F=ma,$$
+
+these forces cause the objects to accelerate, changing their velocity. In the above equation, the force, object mass and resulting acceleration are denoted $F$, $m$ and $a$, respectively.
+\newline
+
+An example for demonstration is the motion of a weight on the lower end of a spring, fixed in place at the top by a clamp. We can define the position $x$ of the weight to be the distance below the natural equilibrium point in which it does not oscillate, so a negative value of $x$ corresponds to the weight having a position above this point. Hooke's law tells us that the force on the weight is proportional to the displacement from the equilibrium point. The constant of proportionality is denoted $k$, known as the stiffness of the spring. This ``restoring force'' is in the direction of the equilibrium point, and so is negative when the value of $x$ is positive and vice versa. Therefore the force can be written as $F=-kx$. Substituting this force into Newton's second law and slightly rearranging the resulting equation, we get
+$$a=-\frac{k}{m}x,$$
+
+which is the equation for the acceleration of a weight on the end of a spring obeying Hooke's law.
+\newpage
+
+Now that we have the so\hyp{}called ``equation of motion'', we now need to determine the evolution of the system with time. There are two standard ways to do this. The first is to solve the equation analytically, using the mathematics of calculus to determine a closed expression for the position at a given time, usually written $x(t)$. The second option, and the method we will focus on, is to solve the equation numerically, meaning to continually compute the new position of the weight after a small amount of time. Unlike analytic solutions, numerical solutions are generally not perfect, because we have to slice the continuous flow of time into discrete chunks. However, it is often the case that analytic solutions simply do not exist for systems involving sufficiently complex forces, and we can choose the intervals of our time slices to be small enough that the numerical solution we obtain is accurate enough for our liking.
+\newline
+
+There are many approaches to solving equations numerically, but we can directly construct a first attempt. We need to transform our equation of motion into one which makes sense when time is sliced into discrete moments. Denoting the size of our time slice $h$, we want to be able to determine the position of the weight at time $t$ given the position of the weight at the previous time $t-h$.
+\newline
+
+First, we need to rewrite the acceleration: by definition, the acceleration $a$ is the rate of change of the velocity $v$. At a given time $t$, this is equal to the change in velocity since the previous time $t-h$ divided by the time slice interval, written as
+$$a(t)=\frac{v(t)-v(t-h)}{h}.$$
+
+Similarly, the velocity at a given time $t$ is equal to the change in position since the previous time $t-h$ divided by the time slice interval:
+$$v(t)=\frac{x(t)-x(t-h)}{h}.$$
+\newpage
+
+We can rearrange each of these equations into a form which we can use to update the velocity and position with each time step:
+$$v(t)=v(t-h)+ha(t),$$
+$$x(t)=x(t-h)+hv(t).$$
+
+We have nearly everything required to solve this system: we use the first equation to update the velocity to the next time $t$, and then we use this value $v(t)$ in the second equation to update the position to the next time $t$. The acceleration $a(t)$ at each time step is given by our equation of motion,
+$$a(t)=-\frac{k}{m}x(t).$$
+
+As mentioned previously, we need to supply some initial conditions as a starting point, which in this case is the initial position $x(0)$ and velocity $v(0)$ of the weight on the end of the spring. Without these, we simply can not begin to make use of our updating equations.
+\newline
+
+We can implement this scheme as a computer program. We choose the weight mass $m$, spring stiffness $k$, time step size $h$, initial position $x(0)$ and initial velocity $v(0)$ and churn out the list of positions for as many time steps as we like. Graphing the position against time, we produce a numerical solution that looks like the following:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/spring1.pdf}
+\label{plot:spring1}
+\end{figure}
+\newpage
+
+Qualitatively, this certainly looks like the oscillatory motion of a spring, but there is clearly a problem: the weight's extremal positions at the peaks and troughs of the graph are increasing. This is a well\hyp{}known instability of the method we used, known as the ``Euler method''. The equation of motion we used happens to be an equation that can be solved analytically, and we can compare this exact solution to our numerical one:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/spring2.pdf}
+\label{plot:spring2}
+\end{figure}
+
+As expected, the exact solution predicts that the weight will oscillate symmetrically between two fixed extrema. Our numerical solution is accumulating an increasingly large error with each time step. One simple approach to decreasing the rate of this deviation from the exact solution is to decrease the size of the time step:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/spring3.pdf}
+\label{plot:spring3}
+\end{figure}
+
+This did lead to an improvement, but we have had to compute, store and plot ten times as many positions. This increase in required time steps can become a serious problem for complex systems with long simulation times.
+\newpage
+
+Luckily for us, there are other methods of solving equations of motion numerically which are much more accurate than our original construction. The most widely used of these is called the ``Runge\hyp{}Kutta method''. We do not need to write out the details here, but essentially, it uses a smarter rule for updating the velocities of positions which very nicely handles sources of error such as the overshooting we observed.
+\newline
+
+Plotting the Runge\hyp{}Kutta solution with our original time step, we see that there is effectively no discernible difference between it and the exact solution:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/spring4.pdf}
+\label{plot:spring4}
+\end{figure}
+
+This seems quite remarkable, but it should be noted that there is still a very small error accumulating with this method; it is just too small to see, even after millions of time steps. If we increase the step size by a factor of ten, we notice a small error after a few thousand steps:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/spring5.pdf}
+\label{plot:spring5}
+\end{figure}
+\newpage
+
+\section{Lagrangian Mechanics}
+
+Now that we have introduced the powerful Runge\hyp{}Kutta method, we could being to directly apply it to more complex systems involving more particles and more intricate forces. However, nearly a century after the introduction of Newton's laws of motion, Joseph\hyp{}Louis Lagrange discovered a new formulation of classical mechanics, now called ``Lagrangian mechanics''. It is mathematically abstract, but allows us to obtain the equations of motion in a robust way.
+\newline
+
+Skipping various details, Lagrangian mechanics is partially founded on the realisation that the known forces used with Newton's second law could arise from the gradient of a ``potential energy'' $V$. Mathematically, this is written as
+$$F=-\nabla V,$$
+
+which, when dealing with a system in which particles only move in one dimension $x$, is equivalent to
+$$F=-\frac{dV}{dx}.$$
+
+Consider the spring from the previous section. The restoring force from Hooke's law was $F=-kx$, and using the differentiation rule that
+$$\frac{d}{dx}\left(x^2\right)=2x,$$
+
+we can see that the potential energy of the weight on the end of the spring when at position $x$ is
+$$V=\frac{1}{2}kx^2,$$
+
+since we recover the force by substituting it into the equation for the force in one dimension.
+\newpage
+
+The other major foundation of Lagrangian mechanics is an idea called the ``principle of stationary action''. We do not need to go into the details, but this fundamental rule ultimately gives rise to the ``Euler\hyp{}Lagrange equation'', which yields the equation of motion that we want to use,
+$$\frac{d}{dt}\left(\frac{dL}{dv}\right)=\frac{dL}{dx}.$$
+
+The terms $t$, $x$ and $v$ are the time, position and velocity from before. The only new term is $L$, which is the ``Lagrangian''.
+\newline
+
+Temporarily putting aside some technicalities, for a particle acted on by forces generated by potential energy gradients as above, the Lagrangian is simply the kinetic energy $T$ minus the potential energy $V$, where the kinetic energy of a particle with mass $m$ is
+$$T=\frac{1}{2}mv^2.$$
+
+For the spring system, the Lagrangian is therefore
+$$L=T-V=\frac{1}{2}mv^2-\frac{1}{2}kx^2.$$
+
+Now we use this in the Euler\hyp{}Lagrange equation. First, we can compute the right\hyp{}hand side,
+$$\frac{d}{dx}L=-kx.$$
+
+For the left\hyp{}hand side, we can first compute the derivative inside the parentheses,
+$$\frac{d}{dv}L=mv.$$
+
+Then, using the fact that the rate of change of the velocity $v$ is the acceleration $a$, we can compute the outer derivative,
+$$\frac{d}{dt}\left(mv\right)=ma.$$
+\newpage
+
+Putting both sides together, and dividing both sides by $m$, we recover the equation of motion for the weight on the end of the spring,
+$$a=-\frac{k}{m}x.$$
+
+It is natural to ask what is gained by going through this elaborate process. The answer is that, in general, it is much simpler and less error\hyp{}prone to find the Lagrangian and use the Euler\hyp{}Lagrange equations than to find the equations of motion directly using Newton's laws, especially for complex systems.
+\newline
+
+A famous example is the ``double pendulum''. Consider a single pendulum consisting of a particle of mass $m$ on the end of a rod of length $\ell$. The pivot of the rod of the first pendulum is suspended above the ground at a fixed point, while the top of the second rod is connected to the particle on the end of the first. Since the particles are constrained to move in circles of radius $\ell$ about the pivots of their rods, we can use angles of rotation in the Lagrangian rather than individual horizontal and vertical coordinates to track their positions.
+\newline
+
+To write the double pendulum Lagrangian, we need to find the total kinetic and potential energy. First, we find the conversions from the horizontal coordinates $x_1$, $x_2$ and vertical coordinates $y_1$, $y_2$ of the particles to the angles of rotation $\theta_1$, $\theta_2$ of the two pendulums. Using trigonometry, we get the following relationships:
+\begin{gather*}
+x_1=\ell\sin\theta_1,\\[4pt]
+y_1=-\ell\cos\theta_1,\\[4pt]
+x_2=x_1+\ell\sin\theta_2,\\[4pt]
+y_2=y_1-\ell\cos\theta_2.
+\end{gather*}
+\newpage
+
+The potential energy for a particle of mass $m$ in a downwards gravitational field of strength $g$ is simply $mgy$, where $y$ is the vertical coordinate of the particle. This is the only form of potential energy for this system, so the total potential energy is
+$$V=V_1+V_2=mgy_1+mgy_2=-mg\ell\left(2\cos\theta_1+\cos\theta_2\right).$$
+
+It should be noted that gravity did not play an explicit role in the spring example from the previous section because it only determined the position of the natural resting place of the weight. If we had not defined the coordinate $x$ to be relative to this point, the weight would have simply oscillated about a displaced, non\hyp{}zero position instead.
+\newline
+
+The kinetic energy requires finding the velocities of the two particles in terms of the angles. It is standard notation to write the velocity associated with a position $x$ or angle $\theta$ as $\dot{x}$ or $\dot{\theta}$, respectively. Recalling that velocities are rates of change of positions with time, we have
+\begin{gather*}
+\dot{x}_1=\frac{dx_1}{dt}=\ell\dot{\theta}_1\cos\theta_1,\\[8pt]
+\dot{y}_1=\frac{dy_1}{dt}=\ell\dot{\theta}_1\sin\theta_1,\\[8pt]
+\dot{x}_2=\frac{dx_2}{dt}=\dot{x}_1+\ell\dot{\theta}_2\cos\theta_2,\\[8pt]
+\dot{y}_2=\frac{dy_2}{dt}=\dot{y}_1+\ell\dot{\theta}_2\sin\theta_2.
+\end{gather*}
+
+We have used the ``chain rule'' of differentiation to compute the derivatives of the sines and cosines with respect to time. Finally, we write the total kinetic energy as the sum of the kinetic energies of the particles, which in terms of the horizontal and vertical components is
+$$T=T_1+T_2=\frac{1}{2}m\left(\dot{x}_1{}^2+\dot{y}_1{}^2\right)+\frac{1}{2}m\left(\dot{x}_2{}^2+\dot{y}_2{}^2\right).$$
+\newpage
+
+Substituting in our derived expressions for these velocities, making use of some trigonometric identities, and defining $\Delta=\theta_1-\theta_2$, we have
+$$T=\frac{1}{2}m\ell^2\left(2\dot{\theta}_1{}^2+\dot{\theta}_2{}^2+2\dot{\theta}_1\dot{\theta}_2\cos\Delta\right).$$
+
+As a result, we now have the Lagrangian of the double pendulum in terms of the two angular coordinates,
+$$L=\frac{1}{2}m\ell^2\left(2\dot{\theta}_1{}^2+\dot{\theta}_2{}^2+2\dot{\theta}_1\dot{\theta}_2\cos\Delta\right)+mg\ell\left(2\cos\theta_1+\cos\theta_2\right).$$
+
+This is a Lagrangian of two coordinates, and there is an Euler\hyp{}Lagrange equation for each. In the new notation, these take the following form:
+$$\frac{d}{dt}\left(\frac{dL}{d\dot{\theta}_1}\right)=\frac{dL}{d\theta_1},$$
+$$\frac{d}{dt}\left(\frac{dL}{d\dot{\theta}_2}\right)=\frac{dL}{d\theta_2}.$$
+
+After computing the derivatives, simplifying expressions and denoting the angular accelerations as $\ddot{\theta}_1$ and $\ddot{\theta}_2$, we get the two equations of motion,
+$$\ddot{\theta}_1+\frac{1}{2}\ddot{\theta}_2\cos\Delta=-\frac{1}{2}\dot{\theta}_2{}^2\sin\Delta-\frac{g}{\ell}\sin\theta_1,$$
+$$\ddot{\theta}_2+\ddot{\theta}_1\cos\Delta=\dot{\theta}_1{}^2\sin\Delta-\frac{g}{\ell}\sin\theta_2.$$
+
+We can not use the Runge\hyp{}Kutta method to yield a numerical solution yet, because the two angular accelerations appear in both equations. What we need is two equations which separately predict each angular acceleration at a given time. After rearranging these simultaneous equations into the desired form, we finally obtain
+{\small$$\ddot{\theta}_1=-\frac{\ell(\dot{\theta}_1{}^2\cos\Delta+\dot{\theta}_2{}^2)\sin\Delta+g(2\sin\theta_1-\sin\theta_2\cos\Delta)}{\ell(1+\text{sin}{}^2\Delta)},$$}
+{\small$$\ddot{\theta}_2=\frac{\ell(2\dot{\theta}_1{}^2+\dot{\theta}_2{}^2\cos\Delta)\sin\Delta+2g(\sin\theta_1\cos\Delta-\sin\theta_2)}{\ell(1+\text{sin}{}^2\Delta)}.$$}
+\newpage
+
+The process was a little bit involved, but we nevertheless have two numerically solvable equations of motion that would have been difficult to determine by reasoning about the various forces acting on the two masses with Newton's laws. All of the physics was encoded in the Lagrangian, and the steps afterwards were a series of mathematical manipulations which, in general, can be automated by a computer program.
+\newline
+
+In a similar fashion to the numerical solution of $x$ for the spring, we can plot the solution for $\theta_1$ and $\theta_2$ for a particular set of initial conditions, which correspond to the dark and light grey lines, respectively:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/double1.pdf}
+\label{plot:double1}
+\end{figure}
+
+With these initial conditions, the pendulum only has a small amount of energy, and the oscillations of both rods that we might have expected are only slightly perturbed sinusoidal waves. If we increase the energy by changing the initial conditions, we start to see the emergence of rather more erratic motion:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=240pt]{assets/double2.pdf}
+\label{plot:double2}
+\end{figure}
+\newpage
+
+This is just one example of the very peculiar motion that can be exhibited by the double pendulum due to the ``non\hyp{}linearity'' present in the equations of motion. It becomes particularly important when the rods spend significant periods of time at different angles or changing the direction in which they swing. \newline
+
+The double pendulum is also ``chaotic'', which means that the evolution can be extremely sensitive to the initial conditions. In general, chaos theory is an rather subtle branch of mathematics, and although the non\hyp{}linearity is well understood to be vital, there are still special ranges of initial conditions where one might expect chaos, yet fail to find it. This seems to be analogous to the Mandelbrot set and similar fractals containing small regions of sudden, unexpected simplicity.
+\newline
+
+We can also represent numerical solutions using a parametric plot, where we illustrate how two coordinates or velocities change together with time on a grid. With the right choices of initial conditions, this can give rise to rather interesting diagrams. For a low\hyp{}energy configuration, we get the following drawings when plotting $\theta_1$ against $\theta_2$, $\theta_1$ against $\dot{\theta}_1$, and $\dot{\theta}_1$ against $\dot{\theta}_2$, respectively:
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double3.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double4.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double5.pdf}
+\end{subfigure}
+\label{plot:double3}
+\end{figure}
+
+Although it is difficult to understand exactly how, each of the plots have noticeable symmetric qualities, with the details ultimately due to the particular form of the Lagrangian.
+\newpage
+
+Starting in a state with a higher energy, we get something that looks a little less elegant:
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double6.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double7.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double8.pdf}
+\end{subfigure}
+\label{plot:double6}
+\end{figure}
+
+The three regions in the plot to the left are caused by second rod completing full rotations around its pivot. Otherwise, there are qualitative similarities to the first case, though there is, comparatively, a definite lack of coherence.
+\newline
+
+It should be noted that although it is easy to write a program that can compute derivatives, it is hard to write a program that can disentangle the list of equations of motion produced from a general Lagrangian into the form that is directly compatible with the Runge\hyp{}Kutta method. The underlying implementation of coordinates and velocities themselves also requires some careful thought. Having now seen a non\hyp{}trivial example of a Lagrangian, we will move onto a third formulation of classical mechanics, which emerged another century later.
+
+\section{Hamiltonian Mechanics}
+
+One major success of Lagrangian mechanics was that its mathematical abstractions assisted greatly in examining the symmetries and ``conserved quantities'' of physical systems, particularly their connection through a profound result known as ``Noether's theorem''. In the process of searching for new symmetric structures, William Rowan Hamilton discovered the formulation now known as ``Hamiltonian mechanics''.
+\newpage
+
+Similarly to before, we generate equations of motion from a particular mathematical quantity, which can be derived from Lagrangian mechanics, that encapsulates the physics of the system we are interested in. First, we will rewrite the Euler\hyp{}Lagrange equations in terms of general coordinates $q_i$, which can stand for positions, angles or any other forms of coordinate, and their associated velocities $\dot{q}_i$:
+$$\frac{d}{dt}\left(\frac{dL}{d\dot{q}_i}\right)=\frac{dL}{dq_i}.$$
+
+We define new quantities called the ``canonical momenta'' $p_i$ associated with the coordinates $q_i$ as
+$$p_i=\frac{dL}{d\dot{q}_i}.$$
+
+The Euler\hyp{}Lagrange equations immediately give us expressions for the rates of change of these momenta,
+$$\dot{p}_i=\frac{dL}{dq_i}.$$
+
+Next, we write the rate of change of the Lagrangian, which generally depends on all the $q_i$ and $\dot{q}_i$. It may also depend on time explicitly, which we shall see an example of later, but for now we shall ignore this. By using the chain rule, and then substituting in the momenta and using the product rule backwards to simplify:
+$$\frac{dL}{dt}=\sum_i\left(\frac{dq_i}{dt}\frac{dL}{dq_i}+\frac{d\dot{q}_i}{dt}\frac{dL}{d\dot{q}_i}\right)=\sum_i\left(\dot{q}_i\dot{p}_i+\ddot{q}_ip_i\right)=\frac{d}{dt}\sum_i\dot{q}_ip_i.$$
+
+We have used the sigma notation to denote the sum over all the coordinates and momenta with different subscripts. We can then define the ``Hamiltonian'',
+$$H=\sum_i\dot{q}_ip_i-L.$$
+
+Using the previous equality of time derivatives, we see that the Hamiltonian has the interesting property that it does not change with time.
+\newpage
+
+What is more important to us is the derivatives of the Hamiltonian with respect to the coordinates and momenta,
+$$\frac{dH}{dq_i}=-\frac{dL}{dq_i}=-\dot{p}_i,$$
+$$\frac{dH}{dp_i}=\dot{q}_i.$$
+
+After slightly rearranging these relations, we have the standard forms of ``Hamilton's equations'',
+$$\dot{q}_i=\frac{dH}{dp_i},$$
+$$\dot{p}_i=-\frac{dH}{dq_i}.$$
+
+Instead of having equations that give the accelerations of coordinates, $\ddot{q}_i$, we have equations for both the velocities and rates of change of momentum. It might seem that we have complicated matters, as there are now twice as many equations as before, but recall that we solved the acceleration equation of motion by first updating the velocity and then updating the position in two separated steps.
+\newline
+
+Notice that these equations are also immediately in the form we need for applying the Runge\hyp{}Kutta method. This means that once we have a Hamiltonian, we can write a program that can generate Hamilton's equations and immediately solve them numerically. We also avoid the requirement of handling the time derivatives of coordinates and velocities in the Euler\hyp{}Lagrange equations. Despite this, we do not always avoid an initial equation\hyp{}solving task to find the expression for an explicit Hamiltonian, because while the Lagrangian and Euler\hyp{}Lagrange equations are expressed in terms of $q_i$ and $\dot{q}_i$, the Hamiltonian and Hamilton's equations are expressed in terms of $q_i$ and $p_i$, and so the velocities need to be substituted out for momenta if we are deriving our Hamiltonian from a Lagrangian.
+\newpage
+
+In the case that each particle's contribution to the kinetic energy depends only on the velocities of its associated coordinates, there is a simple substitution of each velocity $\dot{q}_i$ with its corresponding momentum $p_i$. For example, in the case of the spring, the weight's momentum $p$ is equal to $m\dot{q}$, yielding the substitution $\dot{q}=p/m$. In general, each velocity will be equal to the momentum divided by some constant which we shall label $M_i$, and each kinetic energy contribution will be equal to $p_i^2/(2M_i)$.
+\newline
+
+Returning to our expression for the Hamiltonian in terms of the Lagrangian, we can substitute in $\dot{q}_i=p_i/M_i$ to get
+$$H=\sum_i\frac{p_i^2}{M_i}-L=2T-(T-V)=T+V.$$
+
+We find that the Hamiltonian is equal to the kinetic energy plus the potential energy, which is just the total energy. We saw that the Hamiltonian is constant in the case that the Lagrangian does not explicitly depend on time, corresponding to the conservation of energy.
+\newline
+
+The case of the double pendulum is a bit different, and we can not directly use $H=T+V$, even though the Hamiltonian does still correspond to the total energy of the system. The kinetic energy of the second mass does not only depend on $\dot{\theta}_2$, as the second pendulum is connected to the first mass. Therefore the kinetic energy of the second mass depends on the motion of the first, and thus also depends on $\dot{\theta}_1$. This leads to the appearance of the cross\hyp{}term proportional to $\dot{\theta}_1\dot{\theta}_2\cos\Delta$ in the Lagrangian. As a result, the substitution is more complicated as we have to solve a pair of simultaneous equations.
+\newpage
+
+The conjugate momenta for the double pendulum in terms of the angular velocities are
+$$p_1=m\ell^2\left(2\dot{\theta}_1+\dot{\theta}_2\cos\Delta\right),$$
+$$p_2=m\ell^2\left(\dot{\theta}_2+\dot{\theta}_1\cos\Delta\right).$$
+
+This is a typical example of the conjugate momenta of Lagrangian and Hamiltonian mechanics not being equal to the standard, mechanical definition of momentum. In particular, even though the kinetic energy of the first mass does not directly depend on the position or velocity of the second mass, the associated conjugate momentum does.
+\newline
+
+The solution for $\dot{\theta}_1$ and $\dot{\theta}_2$ in terms of the momenta is structurally similar to the solution for the individual accelerations from the Euler\hyp{}Lagrange equations. After substituting in the expressions for the velocities, we get the Hamiltonian for the double pendulum,
+$$H=\frac{p_1{}^2+2p_2{}^2-2p_1p_2\cos\Delta}{2m\ell^2(1+\text{sin}{}^2\Delta)}-mg\ell\left(2\cos\theta_1+\cos\theta_2\right).$$
+
+Applying Hamilton's equations, we get the rates of change of the angles and corresponding momenta,
+\begin{gather*}
+\dot{\theta}_1=\frac{p_1-p_2\cos\Delta}{m\ell^2(1+\text{sin}{}^2\Delta)},\\[8pt]
+\dot{\theta}_2=\frac{2p_2-p_1\cos\Delta}{m\ell^2(1+\text{sin}{}^2\Delta)},\\[8pt]
+\dot{p}_1=-\frac{p_1p_2(2+\text{cos}{}^2\Delta)\sin\Delta}{m\ell^2(1+\text{sin}{}^2\Delta)^2}-2mg\ell\sin\theta_1,\\[8pt]
+\dot{p}_2=\frac{p_1p_2(2+\text{cos}{}^2\Delta)\sin\Delta}{m\ell^2(1+\text{sin}{}^2\Delta)^2}-mg\ell\sin\theta_2.
+\end{gather*}
+\newpage
+
+With the solutions to these equations of motion, we can make more parametric plots, such as $\theta_1$ against $p_1$, $\theta_1$ against $p_2$, and $p_1$ against $p_2$:
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double9.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double10.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/double11.pdf}
+\end{subfigure}
+\label{plot:double9}
+\end{figure}
+
+We can, of course, plot any functions of the quantities we are solving for, but the coordinates, velocities, momenta and rates of change of momenta are, in some sense, the most natural choices.
+\newline
+
+Another interesting example is that of the ``lagging pendulum'', which appeared as a system to be investigated in one of the problems for the 2016 edition of the International Young Physicists' Tournament. In this case, we have a single pendulum swinging from a pivot which is rotating in a circle of radius $r$ parallel to the ground at a frequency $\omega$. Therefore the position of the pivot at time $t$ is given by
+$$x_p=r\cos\omega t,$$
+$$y_p=r\sin\omega t.$$
+
+Here we are using $x$ and $y$ as the two horizontal coordinates parallel to the ground, while $z$ is the vertical coordinate. We will now allow the pendulum to move in all directions rather than confining it to a plane, so we use both a polar angle $\theta$ as well as an azimuthal angle $\varphi$ to encode the position of the mass.
+\newpage
+
+Taking the motion of the pivot into account, the Cartesian coordinates of the mass in terms of the two angular coordinates are
+\begin{gather*}
+x=\ell\sin\theta\cos\varphi+x_p,\\[4pt]
+y=\ell\sin\theta\sin\varphi+y_p,\\[4pt]
+z=\ell\cos\theta.
+\end{gather*}
+
+We differentiate these with respect to time get the Cartesian velocities,
+\begin{gather*}
+\dot{x}=\ell\left(\dot{\theta}\cos\theta\cos\varphi-\dot{\varphi}\sin\theta\sin\varphi\right)-r\omega\sin\omega t,\\[4pt]
+\dot{y}=\ell\left(\dot{\theta}\cos\theta\sin\varphi+\dot{\varphi}\sin\theta\cos\varphi\right)+r\omega\cos\omega t,\\[4pt]
+\dot{z}=-\ell\dot{\theta}\sin\theta.
+\end{gather*}
+
+As before, we shall use a gravitational potential energy, proportional to the vertical coordinate. Along with the standard kinetic energy term, we get the Lagrangian for the lagging pendulum,
+$$L=T-V=\frac{1}{2}m\left(\dot{x}^2+\dot{y}^2+\dot{z}^2\right)+mgz.$$
+
+After a series of trigonometric identities, defining the auxiliary variables $\mathcal{A}=m\ell r\omega\cos\theta\sin(\varphi-\omega t)$ and $\mathcal{B}=m\ell r\omega\sin\theta\cos(\varphi-\omega t)$, and removing constant terms \hyp{} that have no effect on the dynamics \hyp{} we get the final form in terms of the angular coordinates,
+$$L=\frac{1}{2}m\ell^2\left(\dot{\theta}^2+\dot{\varphi}^2\,\text{sin}{}^2\theta\right)+\dot{\theta}\mathcal{A}+\dot{\varphi}\mathcal{B}+mg\ell\cos\theta.$$
+
+Although we shall not write them here, we can of course find and solve the Euler\hyp{}Lagrange equations for this system and find the following patterns when plotting $\theta$ against $\dot{\theta}$, $\theta$ against $\dot{\varphi}$, and $\dot{\theta}$ against $\dot{\varphi}$ for a particular choice of initial conditions:
+\newpage
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/lagging1.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/lagging2.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/lagging3.pdf}
+\end{subfigure}
+\label{plot:lagging1}
+\end{figure}
+
+Following the standard procedure, we can compute the canonical momenta associated with the polar and azimuthal coordinates,
+$$p_\theta=m\ell^2\dot{\theta}+\mathcal{A},$$
+$$p_\varphi=m\ell^2\dot{\varphi}\,\text{sin}{}^2\theta+\mathcal{B}.$$
+
+Solving for the velocities in terms of the momenta and substituting, we get the lagging pendulum Hamiltonian,
+$$H=\frac{1}{2m\ell^2}\left(\left(p_\theta-\mathcal{A}\right)^2+\left(p_\varphi-\mathcal{B}\right)^2\,\text{csc}{}^2\theta\right)-mg\ell\cos\theta.$$
+
+Unlike the double pendulum, the Hamiltonian of the lagging pendulum is not a constant, as it depends explicitly on time through $\mathcal{A}$ and $\mathcal{B}$. Therefore the energy of the system is not conserved. This is a direct consequence of the pendulum being ``driven'' by an external source, abstracted away into the forced motion of the pivot. Nevertheless, we can still use Hamilton's equations just as before, yielding the equations of motion,
+{\small\begin{gather*}
+\dot{\theta}=\frac{p_\theta-\mathcal{A}}{m\ell^2},\\[8pt]
+\dot{\varphi}=\frac{p_\varphi-\mathcal{B}}{m\ell^2\,\text{sin}{}^2\theta},\\[8pt]
+\dot{p}_\theta=\frac{\tan\theta}{m\ell^2}\left(p_\varphi\left(p_\varphi-\mathcal{B}\right)\,\text{csc}{}^2\theta\,\text{cot}{}^2\theta-\mathcal{A}\left(p_\theta-\mathcal{A}\right)\right)-mg\ell\sin\theta,\\[8pt]
+\dot{p}_\varphi=\frac{\tan(\varphi-\omega t)}{m\ell^2}\left(\mathcal{A}\left(p_\theta-\mathcal{A}\right)\,\text{cot}{}^2(\varphi-\omega t)-\mathcal{B}\left(p_\varphi-\mathcal{B}\right)\,\text{csc}{}^2\theta\right).
+\end{gather*}}
+\newpage
+
+Using initial conditions matching those used for the numerical solution to the Euler\hyp{}Lagrange equations, we can plot $\theta$ against $p_\theta$, $\theta$ against $p_\varphi$, and $p_\theta$ against $p_\varphi$:
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/lagging4.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/lagging5.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/lagging6.pdf}
+\end{subfigure}
+\label{plot:lagging4}
+\end{figure}
+
+So far, we have derived two Hamiltonians from their associated Lagrangians. This is usually the method used for analysing physical systems, as writing an expression in terms of coordinates and velocities is usually easier than reasoning immediately about the forms of the conjugate momenta. However, there is nothing stopping us from inventing new Hamiltonians from scratch, and we can always hope that the inherent symmetry of Hamilton's equations will assist in giving rise to interesting and aesthetic numerical solutions.
+\newline
+
+An example of such a direct method is the model of a rigid, rotating wheel suspended in a gravitational field. The energy of the wheel is the sum of its rotational kinetic energy and its gravitational potential energy, which immediately gives us a plausible Hamiltonian,
+$$H=\frac{1}{2I}\left(L_x{}^2+L_y{}^2+L_z{}^2\right)+mgz,$$
+
+where $I$ is the wheel's ``moment of inertia'' and the $L_i$ are the angular momenta.
+\newpage
+
+In terms of the standard Cartesian coordinates and momenta of the wheel's centre of mass, the angular momenta are
+\begin{gather*}
+L_x=yp_z-zp_y,\\[4pt]
+L_y=zp_x-xp_z,\\[4pt]
+L_z=xp_y-yp_x.
+\end{gather*}
+
+After expanding and simplifying, we get
+$$H=\frac{1}{2I}\left(\left(x^2+y^2+z^2\right)\left(p_x{}^2+p_y{}^2+p_z{}^2\right)-\left(xp_x+yp_y+zp_z\right)^2\right)+mgz.$$
+
+The six of Hamilton's equations are
+\begin{gather*}
+\dot{x}=\frac{1}{I}\left(p_x\left(y^2+z^2\right)-x\left(yp_y+zp_z\right)\right),\\[8pt]
+\dot{y}=\frac{1}{I}\left(p_y\left(x^2+z^2\right)-y\left(xp_x+zp_z\right)\right),\\[8pt]
+\dot{z}=\frac{1}{I}\left(p_z\left(x^2+y^2\right)-z\left(xp_x+yp_y\right)\right),\\[8pt]
+\dot{p}_x=\frac{1}{I}\left(p_x\left(yp_y+zp_z\right)-x\left(p_y{}^2+p_z{}^2\right)\right),\\[8pt]
+\dot{p}_y=\frac{1}{I}\left(p_y\left(xp_x+zp_z\right)-y\left(p_x{}^2+p_z{}^2\right)\right),\\[8pt]
+\dot{p}_z=\frac{1}{I}\left(p_z\left(xp_x+yp_y\right)-z\left(p_x{}^2+p_y{}^2\right)\right)-mg.
+\end{gather*}
+
+The downwards gravitational force on the wheel causes it to undergo a phenomenon known as ``precession'', which means that the vector of the wheel's angular momentum rotates.
+\newpage
+
+This can be seen by computing the rates of change of the components of the angular momentum directly,
+\begin{gather*}
+\dot{L}_x=\dot{y}p_z+y\dot{p}_z-\dot{z}p_y-z\dot{p}_y=-mgy,\\[4pt]
+\dot{L}_y=\dot{z}p_x+z\dot{p}_x-\dot{x}p_z-x\dot{p}_z=mgx,\\[4pt]
+\dot{L}_z=\dot{x}p_y+x\dot{p}_y-\dot{y}p_x-y\dot{p}_x=0.
+\end{gather*}
+
+In the simple case where the wheel is spinning without wobbling \hyp{} known as having no ``nutation'' \hyp{} the angular momentum vector is parallel to the position of the wheel's centre of mass relative to the origin of coordinates. We can express this relation using a constant of proportionality $\lambda$:
+\begin{gather*}
+L_x=\lambda x,\\[4pt]
+L_y=\lambda y,\\[4pt]
+L_z=\lambda z.
+\end{gather*}
+
+Ignoring the equation for the rate of change of $L_z$, which is always zero, we can plug our assumption about the state of the wheel into the other two equations, and after rearranging the resulting simultaneous equations, we get
+$$\ddot{x}=-\frac{m^2g^2}{\lambda^2}x,$$
+$$\ddot{y}=-\frac{m^2g^2}{\lambda^2}y.$$
+
+These have the same form as the original equation of motion for the weight attached to the spring. Since the horizontal $x$ and $y$ directions are perpendicular, the oscillations will be out of phase, describing circular motion in the $x$\hyp{}$y$ plane. Therefore, if the wheel is set up with the angular momentum aligned as we assumed, it will revolve at a constant rate around the vertical $z$ axis.
+\newpage
+
+The final set of parametric plots for this gyroscopic system, with the last two in three dimensions, are of $x$ against $y$, $x$ against $z$, $p_x$ against $p_y$, $x$ against $y$ against $z$, and $p_x$ against $p_y$ against $p_z$:
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/wheel1.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/wheel2.pdf}
+\end{subfigure}
+\begin{subfigure}{110pt}
+\includegraphics[width=110pt]{assets/wheel3.pdf}
+\end{subfigure}
+\label{plot:wheel1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{130pt}
+\includegraphics[width=130pt]{assets/wheel4.pdf}
+\end{subfigure}
+\begin{subfigure}{130pt}
+\includegraphics[width=130pt]{assets/wheel5.pdf}
+\end{subfigure}
+\label{plot:whee4}
+\end{figure}
+
+\section{Conclusion}
+
+There are plenty of other Lagrangians and Hamiltonians that we could write that have even more complicated and unintuitive properties. A well\hyp{}known example is the case of a charged particle in a magnetic field, where the force is proportional to the speed of the particle and acts perpendicularly to its direction of motion. It is even possible to write down forces that can not be computed as the gradient of a potential energy, and thus can not be analysed with the Lagrangian or Hamiltonian framework, but it is a curious fact that there are no known forces of nature that have this property.
+\newpage
+
+Additional formulations of classical mechanics exist, such as the rewriting of time evolution in terms of ``Poisson brackets'', and there are many crucial theoretical results such as ``Liouville's theorem'' which we did not explore. These later, deeper abstractions were shown to be capable of bridging the gaps towards both thermodynamics and quantum mechanics, which together have now dominated physics research for over a century.
+\newline
+
+The Lagrangian and Hamiltonian approaches we explored are perhaps most naturally understood as being consequences of the more fundamental quantum mechanics. The Hamiltonian most famously appears in the ``Schr\"odinger equation'',
+$$i\hbar\frac{d}{dt}\vert\psi(t)\rangle=H\vert\psi(t)\rangle,$$
+
+which dictates the time evolution of a system's ``quantum state'', which replaces the coordinates and conjugate momenta of classical mechanics. Hamilton's equations emerge as an accurate approximation when the objects under consideration are heavy or large, which is highlighted by the so\hyp{}called ``Ehrenfest theorem''. It is an interesting fact that although the Hamiltonian appeared relatively late in the development of classical mechanics, it became absolutely essential to the original development of quantum mechanics. For most physicists, it is remains the most important quantity to be analysed in the entire subject.
+\newline
+
+The Lagrangian, on the other hand, plays a rather extraordinary role in quantum mechanics, and is of greatest importance in topics such as particle physics and condensed matter physics. As in the classical case, the Hamiltonian and Lagrangian formulations of quantum mechanics are ultimately equivalent, though it took a few years before Paul Dirac, and later Richard Feynman, demonstrated how a quantum theory associated with the Lagrangian could be constructed.
+\newpage
+
+They showed that the amount by which the quantum state changes from an initial time $t_A$ to a final time $t_B$ can be computed by accounting for the entire infinitude of ways in which the system could evolve between those times, formally written as
+$$\vert\psi(t_B)\rangle=\frac{1}{\mathcal{Z}}\int_{-\infty}^\infty dq_A\,dq_B\,\langle q_A\vert\psi(t_A)\rangle\,\vert q_B\rangle\int_{q_A}^{q_B}\mathcal{D}q\,e^{iS/\hbar}.$$
+
+Each of these infinite possible evolutions contribute a value directly related to the Lagrangian, and these are all gathered together to compute the change in the state. Such a calculation is known as a ``path integral'', and in the case that the system involves heavy or large objects, the only significant contributions to the result of this infinite gathering are those which are associated with evolutions of the system corresponding to the Euler\hyp{}Lagrange equations. This is directly connected to the principle of stationary action that was briefly mentioned when first introducing Lagrangian mechanics: the ``action'' is the quantity
+$$S=\int_{t_A}^{t_B}L\,dt.$$
+
+The paths of stationary action \hyp{} those which yield values of this integral which do not vary when the path is slightly deformed \hyp{} correspond to the classical paths.
+\newline
+
+Although classical mechanics may have been superseded in a sense, there are many important questions left unanswered, and interesting physical systems with unexplained properties to be understood. Additionally, it still finds widespread use today in accurately describing the physics of the macroscopic world, particularly in engineering. For these reasons, among others, it is surely one of the field's most brilliant examples of a theoretical framework that is aesthetic, mysterious, malleable and practical all at once.
+
+\end{document}
